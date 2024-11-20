@@ -15,8 +15,8 @@ FROM eclipse-temurin:17-jdk-jammy AS runtime
 
 WORKDIR /app
 
-COPY --from=build /app/target/products-0.0.1-SNAPSHOT.jar /app/products-0.0.1-SNAPSHOT.jar
+COPY --from=build /app/target/products-service-0.0.1-SNAPSHOT.jar /app/products-service-0.0.1-SNAPSHOT.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/products-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "/app/products-service-0.0.1-SNAPSHOT.jar"]
