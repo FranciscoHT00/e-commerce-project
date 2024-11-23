@@ -5,7 +5,6 @@ import example.microservices.orders.dto.OrderDTO;
 import example.microservices.orders.entities.Order;
 import example.microservices.orders.feign.ProductsClient;
 import example.microservices.orders.repositories.OrderRepository;
-import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

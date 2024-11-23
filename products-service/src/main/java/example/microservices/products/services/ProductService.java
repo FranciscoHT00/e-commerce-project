@@ -63,10 +63,6 @@ public class ProductService {
         }
     }
 
-    public void deleteById(String id){
-        productRepository.deleteById(id);
-    }
-
     private Product mapToEntity(CreateProductDTO productDTO) {
         return Product.builder()
                 .name(productDTO.getName())

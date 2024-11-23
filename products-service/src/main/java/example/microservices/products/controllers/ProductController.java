@@ -2,7 +2,6 @@ package example.microservices.products.controllers;
 
 import example.microservices.products.dto.CreateProductDTO;
 import example.microservices.products.dto.ProductDTO;
-import example.microservices.products.entities.Product;
 import example.microservices.products.services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
