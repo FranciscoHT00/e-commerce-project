@@ -1,5 +1,6 @@
 package example.microservices.orders.services;
 
+import example.microservices.orders.dto.CreateOrderDTO;
 import example.microservices.orders.dto.OrderDTO;
 import example.microservices.orders.entities.Order;
 import example.microservices.orders.feign.ProductsClient;
@@ -26,21 +27,13 @@ public class OrderService {
         this.productsClient = productsClient;
     }
 
-    public Optional<OrderDTO> createOrder(OrderDTO orderDTO) {
-        try{
-            System.out.println(orderDTO.getProductId());
-            ResponseEntity<?> response = productsClient.findProductById(orderDTO.getProductId());
-            if(response.getStatusCode().is2xxSuccessful()) {
-                Order order = mapToEntity(orderDTO);
-                Order savedOrder = orderRepository.save(order);
-                orderDTO = mapToDTO(savedOrder);
-                return Optional.of(orderDTO);
-            }else {
-                return Optional.empty();
-            }
-        }catch (FeignException.NotFound e){
-            return Optional.empty();
-        }
+    public OrderDTO createOrder(CreateOrderDTO orderDTO) {
+
+        ResponseEntity<?> response = productsClient.findProductById(orderDTO.getProductId());
+
+        Order order = mapToEntity(orderDTO);
+        Order savedOrder = orderRepository.save(order);
+        return mapToDTO(savedOrder);
     }
 
     public List<OrderDTO> findAllOrders() {
@@ -53,7 +46,7 @@ public class OrderService {
         return orderRepository.findById(id).map(this::mapToDTO);
     }
 
-    public Optional<OrderDTO> updateOrderById(Long id, OrderDTO orderDTO) {
+    public Optional<OrderDTO> updateOrderById(Long id, CreateOrderDTO orderDTO) {
         Optional<Order> optional = orderRepository.findById(id);
         if (optional.isPresent()) {
             Order existingOrder = optional.get();
@@ -78,9 +71,8 @@ public class OrderService {
         }
     }
 
-    private Order mapToEntity(OrderDTO orderDTO) {
+    private Order mapToEntity(CreateOrderDTO orderDTO) {
         return Order.builder()
-                .id(orderDTO.getId())
                 .userId(orderDTO.getUserId())
                 .productId(orderDTO.getProductId())
                 .quantity(orderDTO.getQuantity())

@@ -1,5 +1,6 @@
 package example.microservices.products.services;
 
+import example.microservices.products.dto.CreateProductDTO;
 import example.microservices.products.dto.ProductDTO;
 import example.microservices.products.entities.Product;
 import example.microservices.products.repositories.ProductRepository;
@@ -19,11 +20,10 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    public ProductDTO createProduct(ProductDTO productDTO) {
+    public ProductDTO createProduct(CreateProductDTO productDTO) {
         Product product = mapToEntity(productDTO);
         Product savedProduct = productRepository.save(product);
-        productDTO = mapToDTO(savedProduct);
-        return productDTO;
+        return mapToDTO(savedProduct);
     }
 
     public List<ProductDTO> findAllProducts() {
@@ -37,7 +37,7 @@ public class ProductService {
         return productRepository.findById(id).map(this::mapToDTO);
     }
 
-    public Optional<ProductDTO> updateProductById(String id, ProductDTO productDTO) {
+    public Optional<ProductDTO> updateProductById(String id, CreateProductDTO productDTO) {
         Optional<Product> optional = productRepository.findById(id);
         if (optional.isPresent()) {
             Product existingProduct = optional.get();
@@ -67,9 +67,8 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    private Product mapToEntity(ProductDTO productDTO) {
+    private Product mapToEntity(CreateProductDTO productDTO) {
         return Product.builder()
-                .id(productDTO.getId())
                 .name(productDTO.getName())
                 .description(productDTO.getDescription())
                 .price(productDTO.getPrice())

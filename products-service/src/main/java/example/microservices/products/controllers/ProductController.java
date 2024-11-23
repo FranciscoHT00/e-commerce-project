@@ -1,9 +1,12 @@
 package example.microservices.products.controllers;
 
+import example.microservices.products.dto.CreateProductDTO;
 import example.microservices.products.dto.ProductDTO;
 import example.microservices.products.entities.Product;
 import example.microservices.products.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +25,7 @@ public class ProductController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
+    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody CreateProductDTO productDTO) {
         ProductDTO createdProduct = productService.createProduct(productDTO);
         return ResponseEntity.ok(createdProduct);
     }
@@ -34,17 +37,24 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDTO> findProductById(@PathVariable String id) {
+    public ResponseEntity<?> findProductById(@PathVariable String id) {
         Optional<ProductDTO> productDTO = productService.findProductById(id);
-        return productDTO.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        if (productDTO.isPresent()) {
+            return ResponseEntity.ok(productDTO.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró un producto con la ID dada.");
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDTO> updateProduct(@RequestBody ProductDTO productDTO, @PathVariable String id) {
+    public ResponseEntity<?> updateProduct(@Valid @RequestBody CreateProductDTO productDTO, @PathVariable String id) {
         Optional<ProductDTO> updatedProduct = productService.updateProductById(id, productDTO);
-        return updatedProduct.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+
+        if (updatedProduct.isPresent()) {
+            return ResponseEntity.ok(updatedProduct.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró un producto con la ID dada.");
+        }
     }
 
     @DeleteMapping("/{id}")
