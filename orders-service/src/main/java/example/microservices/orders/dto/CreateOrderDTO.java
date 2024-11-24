@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
@@ -22,8 +21,8 @@ public class CreateOrderDTO {
     private String productId;
 
     @NotNull(message = "La cantidad no puede estar vacía.")
-    @Min(value = 0, message = "La cantidad no puede ser menor a cero.")
-    private BigDecimal quantity;
+    @Min(value = 1, message = "La cantidad no puede ser menor a uno.")
+    private int quantity;
 
     private String status;
 }

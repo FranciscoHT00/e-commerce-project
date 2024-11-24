@@ -16,5 +16,6 @@ public class ProductDTO {
     private String name;
     private String description;
     private BigDecimal price;
-    private Long stock;
+    private int stock;
+    private int reservedStock;
 }

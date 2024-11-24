@@ -28,5 +28,9 @@ public class CreateProductDTO {
 
     @NotNull(message = "El stock no puede estar vacío.")
     @Min(value = 0, message = "El stock no puede ser menor que cero.")
-    private Long stock;
+    private int stock;
+
+    @NotNull(message = "El stock reservado no puede estar vacío.")
+    @Min(value = 0, message = "El stock reservado no puede ser menor que cero.")
+    private int reservedStock;
 }
