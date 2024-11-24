@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/products")
@@ -37,31 +36,55 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> findProductById(@PathVariable String id) {
-        Optional<ProductDTO> productDTO = productService.findProductById(id);
-        if (productDTO.isPresent()) {
-            return ResponseEntity.ok(productDTO.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró un producto con la ID dada.");
+
+        try {
+            ProductDTO product = productService.findProductById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(product);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
         }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@Valid @RequestBody CreateProductDTO productDTO, @PathVariable String id) {
-        Optional<ProductDTO> updatedProduct = productService.updateProductById(id, productDTO);
+        try {
+            ProductDTO updatedProduct = productService.updateProductById(id, productDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(updatedProduct);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
+        }
+    }
 
-        if (updatedProduct.isPresent()) {
-            return ResponseEntity.ok(updatedProduct.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró un producto con la ID dada.");
+    @PutMapping("/{id}/reserve/{quantity}")
+    public ResponseEntity<?> reserveProduct(@PathVariable String id, @PathVariable int quantity) {
+        try {
+            ProductDTO updatedProduct = productService.reserveProduct(id, quantity);
+            return ResponseEntity.status(HttpStatus.OK).body(updatedProduct);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
-        if (productService.deleteProductById(id)) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteProduct(@PathVariable String id) {
+
+        try {
+            productService.deleteProductById(id);
+            return ResponseEntity.status(HttpStatus.OK).body("Producto eliminado correctamente.");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
         }
     }
 }

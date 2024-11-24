@@ -6,11 +6,9 @@ import example.microservices.orders.entities.Order;
 import example.microservices.orders.feign.ProductsClient;
 import example.microservices.orders.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -28,7 +26,7 @@ public class OrderService {
 
     public OrderDTO createOrder(CreateOrderDTO orderDTO) {
 
-        ResponseEntity<?> response = productsClient.findProductById(orderDTO.getProductId());
+        productsClient.reserveProduct(orderDTO.getProductId(), orderDTO.getQuantity());
 
         Order order = mapToEntity(orderDTO);
         Order savedOrder = orderRepository.save(order);
@@ -41,33 +39,38 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<OrderDTO> findOrderById(Long id) {
-        return orderRepository.findById(id).map(this::mapToDTO);
+    public OrderDTO findOrderById(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró orden con el ID dado."));
+        return mapToDTO(order);
     }
 
-    public Optional<OrderDTO> updateOrderById(Long id, CreateOrderDTO orderDTO) {
-        Optional<Order> optional = orderRepository.findById(id);
-        if (optional.isPresent()) {
-            Order existingOrder = optional.get();
-            existingOrder.setProductId(orderDTO.getProductId());
-            existingOrder.setQuantity(orderDTO.getQuantity());
-            existingOrder.setStatus(orderDTO.getStatus());
+    public OrderDTO updateOrderById(Long id, CreateOrderDTO orderDTO) {
+        Order existingOrder = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró orden con el ID dado."));
 
-            Order savedOrder = orderRepository.save(existingOrder);
-            return Optional.of(mapToDTO(savedOrder));
-        }
-
-        return Optional.empty();
-    }
-
-    public boolean deleteOrderById(Long id) {
-        Optional<Order> optional = orderRepository.findById(id);
-        if (optional.isPresent()) {
-            orderRepository.delete(optional.get());
-            return true;
+        if (!existingOrder.getProductId().equals(orderDTO.getProductId())) {
+            productsClient.reserveProduct(existingOrder.getProductId(), -1*existingOrder.getQuantity());
+            productsClient.reserveProduct(orderDTO.getProductId(), orderDTO.getQuantity());
         } else {
-            return false;
+            int quantityDifference = orderDTO.getQuantity() - existingOrder.getQuantity();
+            productsClient.reserveProduct(orderDTO.getProductId(), quantityDifference);
         }
+
+        existingOrder.setUserId(orderDTO.getUserId());
+        existingOrder.setProductId(orderDTO.getProductId());
+        existingOrder.setQuantity(orderDTO.getQuantity());
+        existingOrder.setStatus(orderDTO.getStatus());
+
+        Order savedOrder = orderRepository.save(existingOrder);
+        return mapToDTO(savedOrder);
+    }
+
+    public void deleteOrderById(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró orden con el ID dado."));
+
+        orderRepository.delete(order);
     }
 
     private Order mapToEntity(CreateOrderDTO orderDTO) {

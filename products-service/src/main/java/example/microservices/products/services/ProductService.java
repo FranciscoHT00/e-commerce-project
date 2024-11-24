@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductService {
@@ -33,34 +32,46 @@ public class ProductService {
                 .toList();
     }
 
-    public Optional<ProductDTO> findProductById(String id) {
-        return productRepository.findById(id).map(this::mapToDTO);
+    public ProductDTO findProductById(String id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró producto con el ID dado."));
+        return mapToDTO(product);
     }
 
-    public Optional<ProductDTO> updateProductById(String id, CreateProductDTO productDTO) {
-        Optional<Product> optional = productRepository.findById(id);
-        if (optional.isPresent()) {
-            Product existingProduct = optional.get();
-            existingProduct.setName(productDTO.getName());
-            existingProduct.setDescription(productDTO.getDescription());
-            existingProduct.setPrice(productDTO.getPrice());
-            existingProduct.setStock(productDTO.getStock());
+    public ProductDTO updateProductById(String id, CreateProductDTO productDTO) {
+        Product existingProduct = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró producto con el ID dado."));
 
+        existingProduct.setName(productDTO.getName());
+        existingProduct.setDescription(productDTO.getDescription());
+        existingProduct.setPrice(productDTO.getPrice());
+        existingProduct.setStock(productDTO.getStock());
+
+        Product savedProduct = productRepository.save(existingProduct);
+        return mapToDTO(savedProduct);
+
+    }
+
+    public ProductDTO reserveProduct(String id, int quantity) {
+        Product existingProduct = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró producto con el ID dado."));
+
+        if(existingProduct.getStock() < quantity) {
+            throw new IllegalArgumentException("No hay suficiente stock del producto indicado.");
+        }else {
+            existingProduct.setStock(existingProduct.getStock() - quantity);
+            existingProduct.setReservedStock(existingProduct.getReservedStock() + quantity);
             Product savedProduct = productRepository.save(existingProduct);
-            return Optional.of(mapToDTO(savedProduct));
+            return mapToDTO(savedProduct);
         }
-
-        return Optional.empty();
     }
 
-    public boolean deleteProductById(String id) {
-        Optional<Product> optional = productRepository.findById(id);
-        if (optional.isPresent()) {
-            productRepository.delete(optional.get());
-            return true;
-        } else {
-            return false;
-        }
+
+    public void deleteProductById(String id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró orden con el ID dado."));
+
+        productRepository.delete(product);
     }
 
     private Product mapToEntity(CreateProductDTO productDTO) {
@@ -69,6 +80,7 @@ public class ProductService {
                 .description(productDTO.getDescription())
                 .price(productDTO.getPrice())
                 .stock(productDTO.getStock())
+                .reservedStock(productDTO.getReservedStock())
                 .build();
     }
 
@@ -79,6 +91,7 @@ public class ProductService {
                 .description(product.getDescription())
                 .price(product.getPrice())
                 .stock(product.getStock())
+                .reservedStock(product.getReservedStock())
                 .build();
     }
 

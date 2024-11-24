@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/orders")
@@ -46,25 +45,41 @@ public class OrderController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> findOrderById(@PathVariable Long id) {
-        Optional<OrderDTO> orderDTO = orderService.findOrderById(id);
-
-        if (orderDTO.isPresent()) return ResponseEntity.ok(orderDTO.get());
-        else return ResponseEntity.ok("Order not found");
+        try {
+            OrderDTO order = orderService.findOrderById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(order);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrderDTO> updateOrder(@Valid @RequestBody CreateOrderDTO orderDTO, @PathVariable Long id) {
-        Optional<OrderDTO> updatedOrder = orderService.updateOrderById(id, orderDTO);
-        return updatedOrder.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<?> updateOrder(@Valid @RequestBody CreateOrderDTO orderDTO, @PathVariable Long id) {
+
+        try {
+            OrderDTO updatedOrder = orderService.updateOrderById(id, orderDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(updatedOrder);
+        } catch (FeignException.NotFound|IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        if (orderService.deleteOrderById(id)) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
+        try {
+            orderService.deleteOrderById(id);
+            return ResponseEntity.status(HttpStatus.OK).body("Orden eliminada correctamente.");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
         }
     }
 }
