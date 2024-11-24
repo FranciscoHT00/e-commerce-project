@@ -3,7 +3,6 @@ package example.microservices.orders.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -19,6 +18,6 @@ public class Order {
     private Long id;
     private Long userId;
     private String productId;
-    private BigDecimal quantity;
+    private int quantity;
     private String status;
 }
