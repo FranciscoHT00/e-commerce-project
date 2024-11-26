@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class OrderController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderDTO orderDTO) {
 
         try {
@@ -38,12 +40,14 @@ public class OrderController {
     }
 
     @GetMapping()
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<OrderDTO>> findAllOrders(){
         List<OrderDTO> orders = orderService.findAllOrders();
         return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> findOrderById(@PathVariable Long id) {
         try {
             OrderDTO order = orderService.findOrderById(id);
@@ -57,6 +61,7 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> updateOrder(@Valid @RequestBody CreateOrderDTO orderDTO, @PathVariable Long id) {
 
         try {
@@ -71,6 +76,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
         try {
             orderService.deleteOrderById(id);
@@ -81,5 +87,11 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + ex.getMessage());
         }
+    }
+
+    @GetMapping("/adminTest")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> adminTest(){
+        return ResponseEntity.status(HttpStatus.OK).body("Hola Admin.");
     }
 }

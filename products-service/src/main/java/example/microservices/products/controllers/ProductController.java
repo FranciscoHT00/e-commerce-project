@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,11 +24,13 @@ public class ProductController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody CreateProductDTO productDTO) {
         ProductDTO createdProduct = productService.createProduct(productDTO);
         return ResponseEntity.ok(createdProduct);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping()
     public ResponseEntity<List<ProductDTO>> findAllProducts(){
         List<ProductDTO> products = productService.findAllProducts();
@@ -35,6 +38,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> findProductById(@PathVariable String id) {
 
         try {
@@ -49,6 +53,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> updateProduct(@Valid @RequestBody CreateProductDTO productDTO, @PathVariable String id) {
         try {
             ProductDTO updatedProduct = productService.updateProductById(id, productDTO);
@@ -62,6 +67,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}/reserve/{quantity}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> reserveProduct(@PathVariable String id, @PathVariable int quantity) {
         try {
             ProductDTO updatedProduct = productService.reserveProduct(id, quantity);
@@ -75,6 +81,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> deleteProduct(@PathVariable String id) {
 
         try {
@@ -86,5 +93,11 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + ex.getMessage());
         }
+    }
+
+    @GetMapping("/adminTest")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> adminTest(){
+        return ResponseEntity.status(HttpStatus.OK).body("Hola Admin.");
     }
 }
