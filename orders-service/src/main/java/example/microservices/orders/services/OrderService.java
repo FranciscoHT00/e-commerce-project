@@ -6,6 +6,9 @@ import example.microservices.orders.entities.Order;
 import example.microservices.orders.feign.ProductsClient;
 import example.microservices.orders.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +32,7 @@ public class OrderService {
         productsClient.reserveProduct(orderDTO.getProductId(), orderDTO.getQuantity());
 
         Order order = mapToEntity(orderDTO);
+        order.setUserId(getSubjectFromToken());
         Order savedOrder = orderRepository.save(order);
         return mapToDTO(savedOrder);
     }
@@ -57,7 +61,6 @@ public class OrderService {
             productsClient.reserveProduct(orderDTO.getProductId(), quantityDifference);
         }
 
-        existingOrder.setUserId(orderDTO.getUserId());
         existingOrder.setProductId(orderDTO.getProductId());
         existingOrder.setQuantity(orderDTO.getQuantity());
         existingOrder.setStatus(orderDTO.getStatus());
@@ -80,12 +83,12 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró orden con el ID dado."));
 
+        productsClient.reserveProduct(order.getProductId(), -1*order.getQuantity());
         orderRepository.delete(order);
     }
 
     private Order mapToEntity(CreateOrderDTO orderDTO) {
         return Order.builder()
-                .userId(orderDTO.getUserId())
                 .productId(orderDTO.getProductId())
                 .quantity(orderDTO.getQuantity())
                 .status(orderDTO.getStatus())
@@ -100,6 +103,18 @@ public class OrderService {
                 .quantity(order.getQuantity())
                 .status(order.getStatus())
                 .build();
+    }
+
+    private String getSubjectFromToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Jwt jwt) {
+                return jwt.getSubject();
+            }
+        }
+        return null;
     }
 
 }

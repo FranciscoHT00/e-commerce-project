@@ -14,9 +14,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateOrderDTO {
 
-    @NotNull(message = "El id del usuario no puede estar vacío.")
-    private Long userId;
-
     @NotNull(message = "El id del producto no puede estar vacío.")
     private String productId;
 
