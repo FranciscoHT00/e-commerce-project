@@ -75,6 +75,21 @@ public class OrderController {
         }
     }
 
+    @PatchMapping("/{id}/change-status/{status}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> changeStatus(@PathVariable Long id, @PathVariable String status) {
+
+        try {
+            OrderDTO updatedOrder = orderService.changeStatus(id, status);
+            return ResponseEntity.status(HttpStatus.OK).body(updatedOrder);
+        } catch (FeignException.NotFound|IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
+        }
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> deleteOrder(@PathVariable Long id) {

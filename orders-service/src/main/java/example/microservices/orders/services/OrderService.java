@@ -66,6 +66,16 @@ public class OrderService {
         return mapToDTO(savedOrder);
     }
 
+    public OrderDTO changeStatus(Long id, String status) {
+        Order existingOrder = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró orden con el ID dado."));
+
+        existingOrder.setStatus(status);
+
+        Order savedOrder = orderRepository.save(existingOrder);
+        return mapToDTO(savedOrder);
+    }
+
     public void deleteOrderById(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró orden con el ID dado."));
