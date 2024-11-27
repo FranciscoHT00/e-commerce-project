@@ -69,8 +69,8 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=orders-password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://host.docker.internal:8083/realms/Microservices
-      - spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://host.docker.internal:8083/realms/Microservices/protocol/openid-connect/certs
+      - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak:8083/realms/Microservices
+      - spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://keycloak:8083/realms/Microservices/protocol/openid-connect/certs
     depends_on:
       mysql_db1:
         condition: service_healthy
@@ -104,8 +104,8 @@ services:
       - spring.config.import=optional:configserver:http://config-server:8888
       - SPRING_DATA_MONGODB_URI=mongodb://products_db:27017/products_db
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://host.docker.internal:8083/realms/Microservices
-      - spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://host.docker.internal:8083/realms/Microservices/protocol/openid-connect/certs
+      - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak:8083/realms/Microservices
+      - spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://keycloak:8083/realms/Microservices/protocol/openid-connect/certs
     depends_on:
       products_db:
         condition: service_started
@@ -126,8 +126,8 @@ services:
     environment:
       - spring.config.import=optional:configserver:http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://host.docker.internal:8083/realms/Microservices
-      - spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://host.docker.internal:8083/realms/Microservices/protocol/openid-connect/certs
+      - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak:8083/realms/Microservices
+      - spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://keycloak:8083/realms/Microservices/protocol/openid-connect/certs
     depends_on:
       products-microservice:
         condition: service_started
@@ -172,7 +172,6 @@ services:
       KC_DB_PASSWORD: password
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KC_HOSTNAME: host.docker.internal
       KC_HTTP_PORT: 8083
     ports:
       - "8083:8083"
