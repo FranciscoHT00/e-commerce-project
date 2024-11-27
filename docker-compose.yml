@@ -1,18 +1,44 @@
 services:
 
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    environment:
+      - spring.cloud.config.server.git.password=${GIT_PASSWORD}
+    networks:
+      - app-network
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   service-registry:
     build:
       context: ./service-registry
       dockerfile: Dockerfile
     container_name: service-registry
     environment:
+      - spring.config.import=optional:configserver:http://config-server:8888
       - EUREKA_INSTANCE_HOSTNAME=service-registry
       - EUREKA_CLIENT_FETCH_REGISTRY=false
       - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+    depends_on:
+      config-server:
+        condition: service_healthy
     networks:
       - app-network
     ports:
       - "8761:8761"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mysql_db1:
     image: mysql:lts
@@ -38,6 +64,7 @@ services:
       dockerfile: Dockerfile
     container_name: orders-microservice
     environment:
+      - spring.config.import=optional:configserver:http://config-server:8888
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql_db1:3306/orders_db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=orders-password
@@ -48,7 +75,9 @@ services:
       mysql_db1:
         condition: service_healthy
       service-registry:
-        condition: service_started
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
     networks:
       - app-network
     ports:
@@ -72,15 +101,18 @@ services:
       dockerfile: Dockerfile
     container_name: products-microservice
     environment:
+      - spring.config.import=optional:configserver:http://config-server:8888
       - SPRING_DATA_MONGODB_URI=mongodb://products_db:27017/products_db
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://host.docker.internal:8083/realms/Microservices
       - spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://host.docker.internal:8083/realms/Microservices/protocol/openid-connect/certs
     depends_on:
       products_db:
-          condition: service_started
+        condition: service_started
       service-registry:
-          condition: service_started
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
     networks:
       - app-network
     ports:
@@ -92,6 +124,7 @@ services:
       dockerfile: Dockerfile
     container_name: api-gateway
     environment:
+      - spring.config.import=optional:configserver:http://config-server:8888
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - spring.security.oauth2.resourceserver.jwt.issuer-uri=http://host.docker.internal:8083/realms/Microservices
       - spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://host.docker.internal:8083/realms/Microservices/protocol/openid-connect/certs
@@ -102,6 +135,8 @@ services:
         condition: service_started
       service-registry:
         condition: service_started
+      config-server:
+        condition: service_healthy
     networks:
       - app-network
     ports:
